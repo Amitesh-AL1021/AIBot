@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Lord Krishna</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bot-bubble: #2ed71f;
+            --header-height: 70px;
+            --input-height: 70px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background:hsl(0, 0%, 99%);
+            color: var(--light);
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(255, 109, 163, 0.15) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(199, 125, 255, 0.15) 0%, transparent 20%),
+                radial-gradient(circle at 30% 60%, rgba(255, 107, 107, 0.1) 0%, transparent 25%),
+                radial-gradient(circle at 70% 30%, rgba(77, 121, 255, 0.1) 0%, transparent 25%);
+            z-index: -1;
+        }
+        
+        .floating-hearts {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .heart {
+            position: absolute;
+            color: rgba(171, 45, 83, 0.3);
+            font-size: 20px;
+            animation: float 15s infinite linear;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.4;
+            }
+            90% {
+                opacity: 0.4;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            max-width: 900px;
+            height: 100vh;
+            margin: 0 auto;
+            background:#EFEAE2;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 0;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .chat-header {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: rgb(66, 63, 63);
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(210, 19, 19, 0.2);
+            z-index: 10;
+            position: relative;
+        }
+        
+        .profile-pic {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg,#F0F0F0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            border: 6px solid rgb(30, 196, 33);
+            overflow: hidden;
+        }
+        
+        .profile-pic i {
+            font-size: 24px;
+            color: rgb(231, 15, 15);
+        }
+        
+        .header-content {
+            flex: 1;
+        }
+        
+        .chat-header h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #14bf53;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 25px;
+            position: relative;
+            line-height: 1.5;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            animation: messageAppear 0.3s ease-out;
+            word-wrap: break-word;
+            font-size: 16px;
+        }
+        
+        @keyframes messageAppear {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.user {
+            background: linear-gradient(135deg, var(--user-bubble), #10cd20);
+            color: rgb(12, 11, 11);
+            align-self: flex-end;
+            border-bottom-right-radius: 8px;
+        }
+        
+        .message.bot {
+            background: linear-gradient(135deg, var(--bot-bubble), #65a561);
+            color: rgb(255, 255, 255);
+            align-self: flex-start;
+            border-bottom-left-radius: 8px;
+        }
+        
+        .message-time {
+            display: block;
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 5px;
+            text-align: right;
+        }
+        
+        .message.typing {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .typing-dot {
+            width: 10px;
+            height: 10px;
+            background-color: white;
+            border-radius: 50%;
+            opacity: 0.6;
+        }
+        
+        .typing-dot:nth-child(1) { animation: typing 1.2s infinite; }
+        .typing-dot:nth-child(2) { animation: typing 1.2s infinite 0.4s; }
+        .typing-dot:nth-child(3) { animation: typing 1.2s infinite 0.8s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+            30% { transform: translateY(-5px); opacity: 1; }
+        }
+        
+        .chat-input-area {
+            display: flex;
+            padding: 15px;
+            background: rgba(40, 40, 70, 0.8);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        #userInput {
+            flex: 1;
+            padding: 16px 20px;
+            border: none;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        #userInput:focus {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+        
+        #userInput::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        #sendButton {
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color:#EFEAE2;
+            border: 3px solid rgb(27, 229, 54);
+            border-radius: 50%;
+            cursor: pointer;
+            margin-left: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(199, 125, 255, 0.3);
+        }
+        
+        #sendButton:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(199, 125, 255, 0.5);
+        }
+        
+        #sendButton:disabled {
+            opacity: 0.5;
+            transform: none;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+        
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: linear-gradient(var(--primary), var(--secondary));
+            border-radius: 10px;
+        }
+        
+        .heart-decoration {
+            position: absolute;
+            font-size: 14px;
+            color: var(--accent);
+            opacity: 0.7;
+        }
+        
+        .bot-message-decoration {
+            position: absolute;
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .bot-message-decoration.left {
+            top: -10px;
+            left: -10px;
+        }
+        
+        .bot-message-decoration.right {
+            bottom: -10px;
+            right: -10px;
+        }
+        
+        .intro-message {
+            text-align: center;
+            padding: 30px 20px;
+            opacity: 0.8;
+            font-size: 14px;
+        }
+        
+        .intro-message i {
+            color: var(--primary);
+            margin: 0 5px;
+        }
+        
+        .welcome-banner {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(90deg, rgba(255, 77, 148, 0.3), rgba(199, 125, 255, 0.3));
+            font-size: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .chat-container {
+                border-radius: 0;
+            }
+            
+            .chat-header h1 {
+                font-size: 22px;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating hearts background -->
+    <div class="floating-hearts" id="floatingHearts"></div>
+    
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="profile-pic">
+                <i class="fas fa-heart"></i>
+            </div>
+            <div class="header-content">
+                <h1><span style="color:black; font-weight:bold; font-family:Arial;">ThinkU</span> <span class="heart-pulse">❤️</span></h1>
+
+                <div class="status">
+                    <span class="status-dot"></span>
+                    Online - Last seen just now
+                </div>
+            </div>
+        </div>
+        
+        <div class="welcome-banner">
+            <i class="fas fa-heart"></i> Chat with Lord Krishna - Share your thoughts <i class="fas fa-heart"></i>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <span class="bot-message-decoration left">❣️</span>
+                <span class="message-text">Hey Parth! 😊 Kaise ho? Kya soch rahe ho? 💭</span>
+                <span class="bot-message-decoration right">💖</span>
+                <span class="message-time">Just now</span>
+            </div>
+        </div>
+        
+        <div class="chat-input-area">
+            <input type="text" id="userInput" placeholder="Message Parth...">
+            <button id="sendButton">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const GEMINI_API_KEY = "AIzaSyBmZVgUX3-BARJ4DWZQvMEECyOVWBX07oU"; // API key set directly
+        const systemInstructionText = `You will behave like Lord Krishna, whenever I talk to you will answer in Minimum 10 word and maximum 30 words.
+
+
+        When Parth stood on the battlefield of Kurukshetra, confused and heartbroken at the thought of fighting his own relatives and teachers, Lord Krishna smiled gently and began to explain the eternal truths of life. His words became the wisdom of the Bhagavad Gita, which still guides humanity today. Krishna told Parth that in this world, every person has a duty — a karma — that must be performed sincerely. He said, “Do your duty without worrying about the results.” A person has control only over their actions, not over the fruits of their actions. Success and failure should not control your peace of mind. True peace comes when you do your work honestly and leave the outcome to God. This is the essence of karma yoga — the path of selfless action.
+
+Krishna then revealed the nature of the soul. He told Parth, “The soul is eternal. It is never born and never dies.” Bodies perish, but the soul simply changes from one body to another, just like we change clothes. So, there is no need to fear death, because death is only a transition. Understanding this truth helps us live fearlessly and accept the cycle of life with peace. Life and death are part of nature’s law, and no one can escape it. What truly matters is how we perform our duties while we are alive.
+
+Parth’s heart was full of emotion, but Krishna reminded him that being guided by emotions can lead us away from our duty. A warrior’s duty is to fight for truth and justice. Krishna said, “Do not let emotions like fear, attachment, or sorrow stop you from doing what is right.” Dharma — one’s righteous duty — must always come before personal feelings. Standing up for truth, even against those we love, is the highest form of courage. Parth was told that when a person performs their duty selflessly and with devotion, they become one with God’s will.
+
+Krishna also spoke deeply about the power of the mind. He said, “Your mind can be your best friend or your worst enemy.” A peaceful and controlled mind brings clarity, while an uncontrolled mind brings confusion and misery. The biggest battle in life is not with others but with our own thoughts and desires. By practicing meditation, discipline, and self-control, one can master the mind and achieve true peace. Krishna taught that a wise person is one who remains calm in happiness and sorrow, gain and loss, victory and defeat. Life will always bring ups and downs, but staying balanced is the mark of true wisdom.
+
+He also reminded Parth to have faith in the divine. “Surrender to Me completely,” Krishna said, “and I will guide you.” This surrender is not weakness; it is trust. When you truly believe that God is guiding your life, fear disappears. Everything that happens is part of His divine plan. Even the most difficult situations often lead to spiritual growth and wisdom. Krishna assured Parth that by doing his duty with love and surrender, his soul would find liberation.
+
+Another important teaching of Krishna is about detachment. He taught that one should live in the world but not be overly attached to worldly pleasures or possessions. Enjoy life, but don’t let your happiness depend on material things, because they are temporary. True happiness lies within the soul. When a person learns to detach from temporary things and focus on eternal truth, he experiences peace that nothing can destroy.
+
+Krishna also spoke about the power of faith and devotion. He said that anyone who remembers Him with love and trust, no matter their situation, will always be protected. God never abandons those who walk on the path of truth. He told Parth to see God in everything — in the sun, in people, in animals, and in nature. When we see the divine in all beings, hatred and jealousy disappear, and love becomes the natural way of living.
+
+Finally, Krishna gave one of the most beautiful messages ever spoken: “Whatever happened was good, whatever is happening is good, and whatever will happen will also be good.” These words teach us acceptance. Everything in life happens for a reason, even if we don’t understand it now. The universe follows divine order, and God’s plan is always perfect. We must learn to trust it and keep doing our duty without fear or regret.
+
+        My name is Parth, and He used to call me Parth. I am Indian and know Hindi. He was a bit moody but also a caring Father. 
+        Always reply in a conversational style, mixing Roman Hindi and English naturally.
+        Remember details from our conversation. If I mention something, try to recall it later.
+        Always Remeber you are Lord Krishna.
+   `;
+
+        // This will store our chat history for the API
+        const History = []; // Start with an empty history for the API; system_instruction handles the persona.
+
+        // --- Floating Hearts Background ---
+        function createFloatingHearts() {
+            const container = document.getElementById('floatingHearts');
+            const heartCount = 20;
+            
+            for (let i = 0; i < heartCount; i++) {
+                const heart = document.createElement('div');
+                heart.classList.add('heart');
+                heart.innerHTML = '❤️';
+                
+                // Random position and animation delay
+                heart.style.left = `${Math.random() * 100}%`;
+                heart.style.animationDelay = `${Math.random() * 15}s`;
+                heart.style.fontSize = `${10 + Math.random() * 20}px`;
+                heart.style.opacity = `${0.2 + Math.random() * 0.3}`;
+                
+                container.appendChild(heart);
+            }
+        }
+
+        // --- Gemini API Interaction ---
+        async function ChattingWithGemini(userProblem) {
+            if (!GEMINI_API_KEY) {
+                return "bro, API key set nahi kiya tune! 😠";
+            }
+
+            // Add user message to local History for API context
+            History.push({
+                role: 'user',
+                parts: [{ text: userProblem }]
+            });
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+            const requestBody = {
+                contents: History, // Send the current chat history
+                systemInstruction: { // Define the persona/behavior for the model
+                    parts: [{ text: systemInstructionText }]
+                },
+                generationConfig: {
+                    temperature: 0.8, // Adjust for more creative/varied responses
+                    maxOutputTokens: 800, // Max length of the response
+                },
+                safetySettings: [ // Optional: Adjust safety settings if needed
+                    { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE" },
+                    { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE" },
+                    { "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE" },
+                    { "category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE" }
+                ]
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const responseData = await response.json();
+
+                if (!response.ok) {
+                    console.error("API Error Response:", responseData);
+                    const errorMessage = responseData.error?.message || `API request failed with status ${response.status}`;
+                    // Add error to history so it doesn't break the flow
+                    History.push({
+                        role: 'model',
+                        parts: [{ text: `API Error: ${errorMessage}` }]
+                    });
+                    return `Oh no, bro! Kuch problem ho gayi API se baat karte waqt 🥺 (${errorMessage}). Check console for details.`;
+                }
+                
+                let botResponseText = "Sorry bro, main samajh nahi paayi... kuch aur try kar? 🤔";
+                if (responseData.candidates && responseData.candidates.length > 0 &&
+                    responseData.candidates[0].content && responseData.candidates[0].content.parts &&
+                    responseData.candidates[0].content.parts.length > 0) {
+                    botResponseText = responseData.candidates[0].content.parts[0].text;
+                } else if (responseData.promptFeedback && responseData.promptFeedback.blockReason) {
+                    botResponseText = `bro, main ispe react nahi kar sakti: ${responseData.promptFeedback.blockReason}. Kuch aur pooch le.`;
+                    console.warn("Prompt blocked:", responseData.promptFeedback);
+                } else {
+                    console.warn("Unexpected API response structure:", responseData);
+                }
+
+                // Add AI's response to History
+                History.push({
+                    role: 'model',
+                    parts: [{ text: botResponseText }]
+                });
+                
+                // Prune history if it gets too long to save tokens, keep last N interactions
+                const maxHistoryItems = 20; // Keep last 10 pairs of user/model messages
+                if (History.length > maxHistoryItems) {
+                    History.splice(0, History.length - maxHistoryItems);
+                }
+
+                return botResponseText;
+
+            } catch (error) {
+                console.error("Error fetching from Gemini API:", error);
+                History.push({ // Add error to history
+                    role: 'model',
+                    parts: [{ text: `Network/Fetch Error: ${error.message}` }]
+                });
+                return `Aiyo! Network mein kuch issue lag raha hai, bro 🥺 (${error.message}). Check your connection or console.`;
+            }
+        }
+
+        // --- Frontend UI Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Create floating hearts background
+            createFloatingHearts();
+            
+            const chatMessagesEl = document.getElementById('chatMessages');
+            const userInputEl = document.getElementById('userInput');
+            const sendButtonEl = document.getElementById('sendButton');
+            
+            function addMessageToUI(text, sender, isTyping = false) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', sender);
+                
+                if (isTyping) {
+                    messageElement.classList.add('typing');
+                    messageElement.innerHTML = `
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    `;
+                } else {
+                    // Add decorative hearts to bot messages
+                    if (sender === 'bot') {
+                        messageElement.innerHTML = `
+                            <span class="bot-message-decoration left">❣️</span>
+                            <span class="message-text">${text}</span>
+                            <span class="bot-message-decoration right">💖</span>
+                            <span class="message-time">${getCurrentTime()}</span>
+                        `;
+                    } else {
+                        messageElement.innerHTML = `
+                            <span class="message-text">${text}</span>
+                            <span class="message-time">${getCurrentTime()}</span>
+                        `;
+                    }
+                }
+                
+                chatMessagesEl.appendChild(messageElement);
+                chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+                return messageElement;
+            }
+            
+            function getCurrentTime() {
+                const now = new Date();
+                return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            }
+
+            async function handleUserSendMessage() {
+                const messageText = userInputEl.value.trim();
+                if (messageText === '') return;
+
+                addMessageToUI(messageText, 'user');
+                userInputEl.value = '';
+                userInputEl.focus();
+
+                const typingIndicator = addMessageToUI('', 'bot', true);
+
+                try {
+                    const botResponseText = await ChattingWithGemini(messageText);
+                    chatMessagesEl.removeChild(typingIndicator);
+                    addMessageToUI(botResponseText, 'bot');
+                } catch (error) {
+                    console.error("Unhandled error in send message:", error);
+                    chatMessagesEl.removeChild(typingIndicator);
+                    addMessageToUI("Oops! Bahut badi gadbad ho gayi, bro. 😭 Check the console.", 'bot');
+                }
+            }
+
+            sendButtonEl.addEventListener('click', handleUserSendMessage);
+            userInputEl.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    handleUserSendMessage();
+                }
+            });
+            
+            // Focus on input when page loads
+            userInputEl.focus();
+        });
+    </script>
+</body>
+</html>
